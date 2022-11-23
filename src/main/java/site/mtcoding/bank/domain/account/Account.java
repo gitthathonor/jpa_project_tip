@@ -7,7 +7,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import lombok.AccessLevel;
@@ -15,7 +14,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import site.mtcoding.bank.domain.AuditingTime;
-import site.mtcoding.bank.domain.transaction.Transaction;
 import site.mtcoding.bank.domain.user.User;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE) // 내가 new할 상황은 없다. JPA(hibernate)가 create 하면서 사용할 것.
