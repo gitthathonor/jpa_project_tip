@@ -8,7 +8,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 import site.mtcoding.bank.config.enums.UserEnum;
-import site.mtcoding.bank.handler.LoginHandler;
+import site.mtcoding.bank.handler.CustomLoginHandler;
 
 // SecurityFilterChain
 @Configuration
@@ -16,7 +16,7 @@ public class SecurityConfig {
 
     // configuration파일에서는 생성자 주입 X, @Autowired를 통해서 사용해라
     @Autowired
-    private LoginHandler loginHandler;
+    private CustomLoginHandler customLoginHandler;
 
     // 스프링 시큐리티에서 로그인 시에 패스워드를 해시로 변환해주기 위해서 필요. 시큐리티 쓸거면 무조건 붙여야 한다.
     @Bean
@@ -30,7 +30,7 @@ public class SecurityConfig {
         http.csrf().disable(); // csrf란? 쿠키랑 비슷하게 이 유저가 사이트가 원하는 방법으로 제대로 들어온 것인지를 구분하는 어떤 값을 통해서 확인하는 정책.
         // 포스트맨 테스트 시에 문제가 되기 때문에 disable() 걸어놓는다.
 
-        http.authorizeRequests()
+        http.authorizeHttpRequests()
                 .antMatchers("/api/transaction/**").authenticated()
                 .antMatchers("/api/user/**").authenticated()
                 .antMatchers("/api/account/**").authenticated()
@@ -41,8 +41,8 @@ public class SecurityConfig {
                 .usernameParameter("username")
                 .passwordParameter("password")
                 .loginProcessingUrl("/api/login")
-                .successHandler(loginHandler)
-                .failureHandler(loginHandler);
+                .successHandler(customLoginHandler)
+                .failureHandler(customLoginHandler);
 
         return http.build();
     }
