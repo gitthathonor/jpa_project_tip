@@ -10,13 +10,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import site.mtcoding.bank.config.auth.LoginUser;
 import site.mtcoding.bank.dto.ResponseDto;
+import site.mtcoding.bank.dto.UserRespDto.LoginRespDto;
 
 @Component
 public class CustomLoginHandler implements AuthenticationSuccessHandler, AuthenticationFailureHandler {
@@ -28,6 +33,18 @@ public class CustomLoginHandler implements AuthenticationSuccessHandler, Authent
                         Authentication authentication) throws IOException, ServletException {
                 // 직접 처리해줌
                 log.debug("디버그 : onAuthenticationSuccess 실행됨");
+
+                LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+                LoginRespDto loginRespDto = new LoginRespDto(loginUser.getUser());
+
+                ObjectMapper om = new ObjectMapper();
+                ResponseDto<?> responseDto = new ResponseDto<>("로그인 성공", loginRespDto);
+                String responseBody = om.writeValueAsString(responseDto);
+                response.setContentType("application/json; charset=utf-8");
+                response.setStatus(200);
+                // BufferedWriter를 사용할 때는 \n"을 마지막에 적어줘서 문장을 인식하게 만들어서 내가 직접적으로 flush를 해야한다.
+                // 하지만 PrintWriter는 autoFlush가 적용되어 있다.
+                response.getWriter().print(responseBody);
 
         }
 

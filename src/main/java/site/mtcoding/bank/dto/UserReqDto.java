@@ -24,9 +24,9 @@ public class UserReqDto {
 
         public User toEntity() {
             return User.builder()
-                    .useranme(username)
+                    .username(username)
                     .password(password)
-                    .emaill(email)
+                    .email(email)
                     .role(UserEnum.CUSTOMER)
                     .build();
         }

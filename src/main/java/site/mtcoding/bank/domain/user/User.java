@@ -27,22 +27,22 @@ public class User extends AuditingTime {
     private Long id;
 
     @Column(unique = true, nullable = false, length = 20)
-    private String useranme;
-    @Column(nullable = false, length = 20)
+    private String username;
+    @Column(nullable = false, length = 60)
     private String password;
     @Column(unique = true, nullable = false, length = 50)
-    private String emaill;
+    private String email;
 
     @Enumerated(EnumType.STRING) // Enum타입이 DB에 없기 때문에 타입을 지정해줘야 한다.
     @Column(unique = true, nullable = false)
     private UserEnum role; // ADMIN, CUSTOMER
 
     @Builder
-    public User(Long id, String useranme, String password, String emaill, UserEnum role) {
+    public User(Long id, String username, String password, String email, UserEnum role) {
         this.id = id;
-        this.useranme = useranme;
+        this.username = username;
         this.password = password;
-        this.emaill = emaill;
+        this.email = email;
         this.role = role;
     }
 
