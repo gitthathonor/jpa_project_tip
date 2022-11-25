@@ -1,50 +1,64 @@
 package site.mtcoding.bank.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 import site.mtcoding.bank.config.enums.UserEnum;
-import site.mtcoding.bank.handler.CustomLoginHandler;
+import site.mtcoding.bank.config.jwt.JwtAuthenticationFilter;
+import site.mtcoding.bank.config.jwt.JwtAuthorizationFilter;
+import site.mtcoding.bank.domain.user.UserRepository;
 
-// SecurityFilterChain
 @Configuration
 public class SecurityConfig {
 
-    // configuration파일에서는 생성자 주입 X, @Autowired를 통해서 사용해라
-    @Autowired
-    private CustomLoginHandler customLoginHandler;
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
-    // 스프링 시큐리티에서 로그인 시에 패스워드를 해시로 변환해주기 위해서 필요. 시큐리티 쓸거면 무조건 붙여야 한다.
+    @Autowired
+    private UserRepository userRepository;
+
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    public class MyCustomDsl extends AbstractHttpConfigurer<MyCustomDsl, HttpSecurity> {
+        @Override
+        public void configure(HttpSecurity http) throws Exception {
+            log.debug("디버그 : SecurityConfig의 configure");
+            AuthenticationManager authenticationManager = http.getSharedObject(AuthenticationManager.class);
+            http.addFilter(new JwtAuthenticationFilter(authenticationManager));
+            http.addFilter(new JwtAuthorizationFilter(authenticationManager, userRepository));
+        }
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        log.debug("디버그 : SecurityConfig의 filterChain");
         http.headers().frameOptions().disable();
-        http.csrf().disable(); // csrf란? 쿠키랑 비슷하게 이 유저가 사이트가 원하는 방법으로 제대로 들어온 것인지를 구분하는 어떤 값을 통해서 확인하는 정책.
-        // 포스트맨 테스트 시에 문제가 되기 때문에 disable() 걸어놓는다.
+        http.csrf().disable();
+
+        http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        http.formLogin().disable();
+        http.httpBasic().disable();
+        http.apply(new MyCustomDsl());
 
         http.authorizeHttpRequests()
                 .antMatchers("/api/transaction/**").authenticated()
                 .antMatchers("/api/user/**").authenticated()
                 .antMatchers("/api/account/**").authenticated()
-                .antMatchers("/api/admin/**").hasRole("ROLE_" + UserEnum.ADMIN) // hasRole()이 새로 생겼다.
-                .anyRequest().permitAll()
-                .and()
-                .formLogin() // x-www-urlencoded(post)으로 날려야 함
-                .usernameParameter("username")
-                .passwordParameter("password")
-                .loginProcessingUrl("/api/login")
-                .successHandler(customLoginHandler)
-                .failureHandler(customLoginHandler);
+                .antMatchers("/api/admin/**").hasRole("ROLE_" + UserEnum.ADMIN)
+                .anyRequest().permitAll();
 
         return http.build();
     }
-
 }

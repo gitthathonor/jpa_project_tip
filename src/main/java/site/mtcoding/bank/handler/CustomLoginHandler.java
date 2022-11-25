@@ -25,7 +25,7 @@ import site.mtcoding.bank.dto.UserRespDto.LoginRespDto;
 
 @Component
 public class CustomLoginHandler implements AuthenticationSuccessHandler, AuthenticationFailureHandler {
-
+                        
         private final Logger log = LoggerFactory.getLogger(getClass());
 
         @Override
